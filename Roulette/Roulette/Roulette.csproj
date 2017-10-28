@@ -76,7 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="index.html" />
-    <Content Include="Roulette_Final_1.2.js" />
+    <Content Include="Roulette_Final_2.1.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
