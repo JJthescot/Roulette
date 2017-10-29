@@ -1,6 +1,7 @@
 function DebugSettings() {
     this.isEnabled = true;
     this.SimulateInput = true;
+    this.SimulationPlayers = 6;
     this.Verbose = true;
     this.Cycles = 1000;
     this.Errors = 0;
@@ -25,6 +26,24 @@ const MAINMENUSTRING = "0. Exit\n" +
                         "5. Select Dozen\n" +
                         "6. Select Column";
 
+/** Exception object to be thrown on errors
+*   @Param{ExceptionType} Type - Type of exception thrown
+*   @Param{String} Message - Message from sender
+*/
+function Exception(Type, Message) {
+    this.type = Type;
+    this.message = Message;
+}
+//  Exception type enumerator
+var ExceptionType = {
+    NotNumeric: 0,
+    BetTypeMismatch: 1,
+    QuitPlayerPlaying: 2,
+    UndefinedBetType: 3,
+    Undefined: 4,
+
+};
+
 var submenuSelectionArray = [
     "Error 001, this should not happen, please report this to anyone but John :P ",
     "Choose a number between 1 and 36" + "\n" + "0 to exit",
@@ -34,8 +53,9 @@ var submenuSelectionArray = [
     "1. Bet 1-12" + "\n" + "2. Bet 13-24" + "\n" + "3. Bet 25-36" + "\n" + "0 to exit",
     "1. Bet Column 1 - " + COLUMN1 + "\n" + "2. Column 2 - " + COLUMN2 + "\n" + "3. Bet Column 3 - " + COLUMN3 + "\n" + "0 to exit"];
 
+// Bet type enumerator
 var BetTypeEnum = {
-    Basic: 0,
+    Cancelled: 0,
     Odd: 1,
     Even: 2,
     Red: 3,
@@ -48,7 +68,7 @@ var BetTypeEnum = {
     Column_1: 10,
     Column_2: 11,
     Column_3: 12,
-    Cancelled: 13,
+    Basic: 13,
 };
 
 var HighLowEnum = {
@@ -77,9 +97,10 @@ var OddEvenEnum = {
     Even: 2,
 };
 
-var htmlTitle;
-var htmlMessageOut;
-
+/*  Base player object for storing all individual player data
+*   @Todo:  Implement multiple bets per player
+*           Store multiple round stats
+*/
 function PlayerObject() {
     this.Id = -1;
     this.BetType = BetTypeEnum.Cancelled;
@@ -89,96 +110,101 @@ function PlayerObject() {
     // this.RoundsWon
     // this.TotalWon
     // this.TotalLoss
-    this.hasQuit = function () { return this.BetType == BetTypeEnum.Cancelled; }
+    this.hasQuit = function(){ return this.BetType == BetTypeEnum.Cancelled; }
 }
 
+/*  Main roulette system controls the flow of the roulette system
+*
+*/
 function RouletteGame() {
-    //individual = 35:1  Zero = 35:1
-    //Dozen = 2:1
-
     this.WinningNumber = -1;
 
-    this.randomizeWinningNumber = function () {
-        this.WinningNumber = (Math.floor(Math.random() * 37));
-    }
+    this.randomizeWinningNumber = function() {
+        this.WinningNumber = parseInt(Math.floor(Math.random() * 37));
+    };
 
-    this.getWinnings = function (player) {
+    /* Take current player object and calculates if the player won then stores the players winnings
+    *   @Todo:  Implement '0' win
+    *           Re-write to a better implementation
+    */
+    //    this.getWinnings = function (player) {
+    this.getWinnings = function(player) {
         switch (player.BetType) {
             case BetTypeEnum.Basic:
                 if (this.isEqual(this.WinningNumber, player.BetNumber)) {
-                    player.Winnings = player.BetAmount * 35;
+                    player.Winnings = (player.BetAmount * 35) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Red:
                 if (this.isRedBlack(this.WinningNumber) == RedBlackEnum.Red) {
-                    player.Winnings = player.BetAmount * 1;
+                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Black:
                 if (this.isRedBlack(this.WinningNumber) == RedBlackEnum.Black) {
-                    player.Winnings = player.BetAmount * 1;
+                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Even:
                 if (this.isEven(this.WinningNumber) == OddEvenEnum.Even) {
-                    player.Winnings = player.BetAmount * 1;
+                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Odd:
                 if (!this.isEven(this.WinningNumber) == OddEvenEnum.Odd) {
-                    player.Winnings = player.BetAmount * 1;
+                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Passe:
                 if (this.ishighLow(this.WinningNumber) == HighLowEnum.Low) {
-                    player.Winnings = player.BetAmount * 1;
+                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Manque:
                 if (this.ishighLow(this.WinningNumber) == HighLowEnum.High) {
-                    player.Winnings = player.BetAmount * 1;
+                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Low_Dozen:
                 if (this.isDozen(this.WinningNumber) == DozensEnum.Low) {
-                    player.Winnings = player.BetAmount * 2;
+                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Mid_Dozen:
                 if (this.isDozen(this.WinningNumber) == DozensEnum.Mid) {
-                    player.Winnings = player.BetAmount * 2;
+                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.High_Dozen:
                 if (this.isDozen(this.WinningNumber) == DozensEnum.High) {
-                    player.Winnings = player.BetAmount * 2;
+                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Column_1:
                 if (this.isColumn(this.WinningNumber) == ColumnEnum.One) {
-                    player.Winnings = player.BetAmount * 2;
+                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Column_2:
                 if (this.isColumn(this.WinningNumber) == ColumnEnum.Two) {
-                    player.Winnings = player.BetAmount * 2;
+                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Column_3:
                 if (this.isColumn(this.WinningNumber) == ColumnEnum.Three) {
-                    player.Winnings = player.BetAmount * 2;
+                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
@@ -186,88 +212,99 @@ function RouletteGame() {
                 return false;
         }
 
-    }
+    };
 
     /**
     *   Test if a value is in column
     *   @Param {Number} - Number to be tested
     *   @Return{ColumnEnum} - Result of the test
+    *   @Throws{Exception} BetTypeMismatch Exception 
     */
     this.isColumn = function (value) {
-        if (COLUMN1.includes(value))
+        if (contains(COLUMN1,value))
             return ColumnEnum.One;
-        if (COLUMN2.includes(value))
+        if (contains(COLUMN2,value))
             return ColumnEnum.Two;
-        if (COLUMN3.includes(value))
+        if (contains(COLUMN3,value))
             return ColumnEnum.Three;
-        return null;
-    }
-
+        else throw new Exception(ExceptionType.BetTypeMismatch, value.toString() + " not a column.");
+    };
     /**
     *   Test if a value is Equal
     *   @Param {Number} - Number to be tested
     *   @Return{boolean} - Result of the test
+    *   @Throws{Exception} BetTypeMismatch Exception 
     */
     this.isEqual = function (value, value2) {
-        return (value == this.WinningNumber);
-    }
+        return (value === this.WinningNumber);
+    };
     /**
     *   Test if a value is odd or even
     *   @Param {Number} - Number to be tested
     *   @Return{OddEvenEnum} - Result of the test
+    *   @Throws{Exception} BetTypeMismatch Exception 
     */
     this.isEven = function (value) {
-        if (value % 2)
-            return OddEvenEnum.Odd;
-        else
-            return OddEvenEnum.Even;
-    }
-
-
+        if (isNumeric(value)) {
+            if (value % 2)
+                return OddEvenEnum.Odd;
+            else
+                return OddEvenEnum.Even;
+        }
+    },
     /**
     *   Test if a value is Red/Black
     *   @Param {Number} - Number to be tested
     *   @Return{RedBlackEnum} - Result of the test
+    *   @Throws{Exception} BetTypeMismatch Exception 
     */
     this.isRedBlack = function (value) {
-        if (RED.includes(value)) {
+        if (contains(RED,value)) {
             return RedBlackEnum.Red;
         }
-        else if (BLACK.includes(value)) {
+        else if (contains(BLACK,value)) {
             return RedBlackEnum.Black;
         }
-    }
-
+        else throw new Exception(ExceptionType.BetTypeMismatch, value.toString() + " not a red/black.");
+    };
     /**
     *   Test if a value is within lower dozen, middle, or high
     *   @Param {Number} - Number to be tested
     *   @Return{DozensEnum} - Result of the test
+    *   @Throws{Exception} BetTypeMismatch Exception 
     */
     this.isDozen = function (number) {
-        if (number > 0 && number <= 12) {
-            return DozensEnum.Low;
+        if (isNumeric(number)) {
+            if (number > 0 && number <= 12) {
+                return DozensEnum.Low;
+            }
+            else if (number > 12 && number <= 24) {
+                return DozensEnum.Mid
+            }
+            else if (number > 24 && number <= 36) {
+                return DozensEnum.High;
+            }
+            else throw new Exception(ExceptionType.BetTypeMismatch, value.toString() + " not a dozen.");
         }
-        else if (number > 12 && number <= 24) {
-            return DozensEnum.Mid
-        }
-        else if (number > 12 && number <= 36) {
-            return DozensEnum.High;
-        }
-    }
-
+    };
     /**
     *   Test if a value is high or low(Manque/Passe)
     *   @Param {Number} - Number to be tested
     *   @Return{HighLowEnum} - Result of the test
+    *   @Throws{Exception} BetTypeMismatch Exception 
     */
     this.ishighLow = function (value) {
-        if (value > 0 && value <= 18) {
-            return HighLowEnum.Low;
+        if (isNumeric(value)) {
+            if (value > 0 && value <= 18) {
+                return HighLowEnum.Low;
+            }
+            else if (value > 18) {
+                return HighLowEnum.High;
+            }
+            else throw new Exception(ExceptionType.BetTypeMismatch, value.toString() + " not High Low.");
         }
-        else if (value > 18) {
-            return HighLowEnum.High;
-        }
-    }
+    };
+
 }
 
 
@@ -275,93 +312,94 @@ function RouletteGame() {
 *   Main bet selection menu for a player, this will ask the player to enter there type of bet
 *   @param {Player} player - Current player selecting a type of bet
 */
-function getPlayerBetChoice(player) {//player) {
-    var menuSelection;
-    var message = "Enter a bet selection for Player " + player.Id + "\n" + MAINMENUSTRING;
-//    do {
+function getPlayerBetChoice(player) {
+    if (player === undefined) throw new Exception(ExceptionType.QuitPlayerPlaying, "Player undefined");
+    else {
+        var menuSelection;
+        var message = "Enter a bet selection for Player " + player.Id + "\n" + MAINMENUSTRING;
         menuSelection = getNumericInput(message, 0, 6);
         if (menuSelection == 0) {
             player.BetType = BetTypeEnum.Cancelled;
             return -1;
         }
-//    } while (menuSelection == undefined || menuSelection < 0 || menuSelection > 5)
 
-    var submenuSelection = -1;
-    switch (menuSelection) {
-        /********** CASE 0 - User selected cancel bet **************/
-        case 0: player.BetType = BetTypeEnum.Cancelled;
-            break; // user exit
-            /********** CASE 1 - All numbers 1 - 36 **************/
-        case 1:
-            submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 36); // ask player for bet type
-            if (submenuSelection == 0) { // If player selects exit from submenu
+        var submenuSelection = -1;
+        switch (menuSelection) {
+            /********** CASE 0 - User selected cancel bet **************/
+            case 0: player.BetType = BetTypeEnum.Cancelled;
+                break; // user exit
+                /********** CASE 1 - All numbers 1 - 36 **************/
+            case 1:
+                submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 36); // ask player for bet type
+                if (submenuSelection == 0) { // If player selects exit from submenu
+                    player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
+                }
+                else {
+                    player.BetType = BetTypeEnum.Basic;     // set players bet type to basic and
+                    player.BetNumber = submenuSelection;    // store the number
+                }
+                break;
+                /********** CASE 2 - Odds and Evens **************/
+            case 2:
+                submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 2);
+                if (submenuSelection == 0) { // If player selects exit from submenu
+                    player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
+                }
+                else {
+                    if (submenuSelection == OddEvenEnum.Odd) player.BetType = BetTypeEnum.Odd;
+                    else if (submenuSelection == OddEvenEnum.Even) player.BetType = BetTypeEnum.Even;
+                }
+                break;
+                /********** CASE 3 - Red or Black **************/
+            case 3:
+                submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 2);
+                if (submenuSelection == 0) { // If player selects exit from submenu
+                    player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
+                }
+                else {
+                    if (submenuSelection == RedBlackEnum.Red) player.BetType = BetTypeEnum.Red;
+                    else if (submenuSelection == RedBlackEnum.Black) player.BetType = BetTypeEnum.Black;
+                }
+                break;
+                /********** CASE 4 - Manque or Passe **************/
+            case 4:
+                submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 2);
+                if (submenuSelection == 0) { // If player selects exit from submenu
+                    player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
+                }
+                else {
+                    if (submenuSelection == HighLowEnum.Low) player.BetType = BetTypeEnum.Manque;
+                    else if (submenuSelection == HighLowEnum.High) player.BetType = BetTypeEnum.Passe;
+                }
+                break;
+                /********** CASE 5 - Dozens 1-12 | 13-24 | 25-36 **************/
+            case 5:
+                submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 3);
+                if (submenuSelection == 0) { // If player selects exit from submenu
+                    player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
+                }
+                else {
+                    if (submenuSelection == DozensEnum.Low) player.BetType = BetTypeEnum.Low_Dozen;
+                    else if (submenuSelection == DozensEnum.Mid) player.BetType = BetTypeEnum.Mid_Dozen;
+                    else if (submenuSelection == DozensEnum.High) player.BetType = BetTypeEnum.High_Dozen;
+                }
+                break;
+                /********** CASE 5 - Column 1/2/3 **************/
+            case 6:
+                submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 3);//Object.keys(ColumnEnum).length);
+                if (submenuSelection == 0) { // If player selects exit from submenu
+                    player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
+                }
+                else {
+                    if (submenuSelection == ColumnEnum.One) player.BetType = BetTypeEnum.Column_1;
+                    else if (submenuSelection == ColumnEnum.Two) player.BetType = BetTypeEnum.Column_2;
+                    else if (submenuSelection == ColumnEnum.Three) player.BetType = BetTypeEnum.Column_3;
+                }
+                break;
+            default:
                 player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
-            }
-            else {
-                player.BetType = BetTypeEnum.Basic;     // set players bet type to basic and
-                player.BetNumber = submenuSelection;    // store the number
-            }
-            break;
-            /********** CASE 2 - Odds and Evens **************/
-        case 2:
-            submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 2);
-            if (submenuSelection == 0) { // If player selects exit from submenu
-                player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
-            }
-            else {
-                if (submenuSelection == OddEvenEnum.Odd) player.BetType = BetTypeEnum.Odd;
-                else if (submenuSelection == OddEvenEnum.Even) player.BetType = BetTypeEnum.Even;
-            }
-            break;
-            /********** CASE 3 - Red or Black **************/
-        case 3:
-            submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 2);
-            if (submenuSelection == 0) { // If player selects exit from submenu
-                player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
-            }
-            else {
-                if (submenuSelection == RedBlackEnum.Red) player.BetType = BetTypeEnum.Red;
-                else if (submenuSelection == RedBlackEnum.Black) player.BetType = BetTypeEnum.Black;
-            }
-            break;
-            /********** CASE 4 - Manque or Passe **************/
-        case 4:
-            submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 2);
-            if (submenuSelection == 0) { // If player selects exit from submenu
-                player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
-            }
-            else {
-                if (submenuSelection == HighLowEnum.Low) player.BetType = BetTypeEnum.Manque;
-                else if (submenuSelection == HighLowEnum.High) player.BetType = BetTypeEnum.Passe;
-            }
-            break;
-            /********** CASE 5 - Dozens 1-12 | 13-24 | 25-36 **************/
-        case 5:
-            submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, 3);
-            if (submenuSelection == 0) { // If player selects exit from submenu
-                player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
-            }
-            else {
-                if (submenuSelection == DozensEnum.Low) player.BetType = BetTypeEnum.Dozen12;
-                else if (submenuSelection == DozensEnum.Mid) player.BetType = BetTypeEnum.Dozen24;
-                else if (submenuSelection == DozensEnum.High) player.BetType = BetTypeEnum.Dozen36;
-            }
-            break;
-            /********** CASE 5 - Dozens 1-12 | 13-24 | 25-36 **************/
-        case 6:
-            submenuSelection = getNumericInput(submenuSelectionArray[menuSelection], 0, Object.keys(ColumnEnum).length);
-            if (submenuSelection == 0) { // If player selects exit from submenu
-                player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
-            }
-            else {
-                if (submenuSelection == ColumnEnum.One) player.BetType = BetTypeEnum.Column_1;
-                else if (submenuSelection == ColumnEnum.Two) player.BetType = BetTypeEnum.Column_2;
-                else if (submenuSelection == ColumnEnum.Three) player.BetType = BetTypeEnum.Column_3;
-            }
-            break;
-        default:
-            player.BetType = BetTypeEnum.Cancelled; // set players bet to cancelled
-            break;
+                break;
+        }
     }
 }
 /*
@@ -370,16 +408,20 @@ function getPlayerBetChoice(player) {//player) {
 *   @Todo: Add test for "£" signs
 */
 function getBetAmount(player) {
-    var input = getNumericInput("Player " + player.Id + "\nHow much do you want to bet (in £'s)?", 0, Number.MAX_SAFE_INTEGER);
-    if (input == 0) player.BetType = BetTypeEnum.Cancelled;
-    else player.BetAmount = input;
+    if (player === undefined) throw new Exception(ExceptionType.Undefined, "Player undefined.");
+    else if (player.hasQuit()) throw new Exception(ExceptionType.QuitPlayerPlaying, "Quit player cannot play.");
+    else {
+        var input = getNumericInput("Player " + player.Id + "\nHow much do you want to bet (in £'s)?", 0, 100000);
+        if (input == 0) player.BetType = BetTypeEnum.Cancelled;
+        else player.BetAmount = input;
+    }
 }
 /*
 *   Prompt the user for the number of players, Maximum is defined as a constant.
 *   @return {Number} Number of players.
 */
-function getNumofPlayers() {
-    return getNumericInput("Enter the number of players who wish to play (between 1-" + MAXPLAYERS + ")", 0, MAXPLAYERS);
+function getNumofPlayers(maxPlayers) {
+    return getNumericInput("Enter the number of players who wish to play (between 1-" + maxPlayers + ")", 0, maxPlayers);
 }
 
 /**
@@ -390,70 +432,103 @@ function getNumofPlayers() {
 function getNumericInput(message, lowerBounds, upperBounds) {
     var input;
     do {
-        input = Number(window.prompt(message));
+        if (DEBUG.isEnabled && DEBUG.SimulateInput)
+            input = parseInt(Math.floor((Math.random() * (upperBounds + 1)) + lowerBounds));
+        else
+            input = parseInt(window.prompt(message));
     } while (isNumeric(input) == false || input < lowerBounds || input > upperBounds)
     return input;
 }
-
 /**
 *   Test if a value is a valid number
 *   @Param {object} value - Value that is to be tested
 *   @Return {boolean} True if the value is is a number otherwise false
+*   @Throws{Exception} NotNumeric Exception 
 */
 function isNumeric(value) {
-    return !isNaN(parseFloat(value)) && isFinite(value);
+    if (!isNaN(parseFloat(value)) && isFinite(value))
+        return true;
+    else return false;//throw new Exception(Exception.NotNumeric, value.toString() + " Not a valid number");
+}
+/**
+*   Replacement for Array.includes for browser compatibility
+*   @Param{Array[Number]} arr - array to be tested
+*   @param{Number} val - value to test if array contains
+*/
+function contains(arr, val) {
+    for (var i = 0; i < arr.length; i++)
+        if (arr[i] === val)
+            return true;
+    return false;
 }
 
-function runGame() {
-//    if (navigator.userAgent.search("rv:11") != -1 || navigator.userAgent.search("MSIE") != -1)
-//        document.write("Browser identified itserlf as " + navigator.userAgent + "<br>" + "Sorry, this application requires features unsupported by \"Microsoft Internet Explorer.\"")
-//    else {
-        var players = [];
-        var roulette = new RouletteGame();
-        roulette.randomizeWinningNumber();
-        if (DEBUG.isEnabled) htmlTitle.innerHTML += (roulette.WinningNumber);
-        var numberOfPlayers = getNumofPlayers();
+function runGame(div) {
+    //    if (navigator.userAgent.search("rv:11") != -1 || navigator.userAgent.search("MSIE") != -1)
+    //        document.write("Browser identified itserlf as " + navigator.userAgent + "<br>" + "Sorry, this application requires features unsupported by \"Microsoft Internet Explorer.\"")
+    //    else {
+    var players = [];
+    var roulette = new RouletteGame();
+    roulette.randomizeWinningNumber();
 
-        for (var i = 0; i < numberOfPlayers; i++) {
-            players[i] = new PlayerObject();
-            players[i].Id = i + 1;
-            getPlayerBetChoice(players[i]);
-            if (players[i].hasQuit() == false) {
-                getBetAmount(players[i]);
-            }
+    var numberOfPlayers;
+    if (DEBUG.isEnabled)
+        numberOfPlayers = DEBUG.SimulationPlayers;
+    else
+        numberOfPlayers = getNumofPlayers(MAXPLAYERS);
+
+    for (var i = 0; i < numberOfPlayers; i++) {
+        players[i] = new PlayerObject();
+        players[i].Id = i + 1;
+        getPlayerBetChoice(players[i]);
+        if (players[i].hasQuit() == false) {
+            getBetAmount(players[i]);
         }
+    }
 
-        htmlMessageOut.innerHTML += "The winning number is " + roulette.WinningNumber + "<br><br>";
-        for (var i = 0; i < numberOfPlayers; i++) {
-            if (players[i].hasQuit())
-                htmlMessageOut.innerHTML += "Player " + players[i].Id + " backed out. <br><br>";
-            else if (roulette.getWinnings(players[i])) {
-                var message = "We have a winner, Congratulations Player " + players[i].Id + " has won £" + players[i].Winnings + " ";
+    var p = document.createElement("p");
+    p.appendChild(document.createTextNode("The winning number is " + roulette.WinningNumber));
+    p.appendChild(document.createElement("br"));
+    for (var i = 0; i < numberOfPlayers; i++) {
+        var output = "";
+        if (players[i].BetType === undefined)
+            throw new Exception(ExceptionType.UndefinedBetType, players[i].toString() + " Player bet type is undefined");
+        else if (players[i].hasQuit())
+            output += "Player " + players[i].Id + " backed out.";
+        else if (roulette.getWinnings(players[i])) {
+            output += "We have a winner, Congratulations Player " + players[i].Id + " has won £" + players[i].Winnings + " ";
 
-                if (players[i].BetType != BetTypeEnum.Basic) {
-                    message += "with a bet on " + Object.keys(BetTypeEnum)[players[i].BetType] + "<br><br>";
-                }
-                else
-                    message += "with number " + players[i].BetNumber + "<br><br>";
-
-                htmlMessageOut.innerHTML += (message);
+            if (players[i].BetType != BetTypeEnum.Basic) {
+                output += "with a bet on " + Object.keys(BetTypeEnum)[players[i].BetType] + "";
             }
             else
-                htmlMessageOut.innerHTML += ("Sorry Player " + players[i].Id + ", your not a winner this time. <br>" + "You lost £" + players[i].BetAmount + "<br>" +
-                            " Why not try and win it back. <br><br>");
-
-            }
+                output += "with number " + players[i].BetNumber;
         }
-    
-//}
-function testGameRandom() {
+        else {
+            output += ("Sorry Player " + players[i].Id + ", your not a winner this time. " + "You lost £" + players[i].BetAmount +
+                " while betting on ");
+            if (players[i].BetType == BetTypeEnum.Basic)
+                output += players[i].BetNumber;
+            else
+                output += Object.keys(BetTypeEnum)[players[i].BetType];
+            output += " Why not try and win it back.";
+        }
+        p.appendChild(document.createTextNode(output));
+        p.appendChild(document.createElement("br"));
+    }
+
+    div.appendChild(p);
+
+}
+
+
+function testGameRandomness() {
     var game = new RouletteGame();
     var nums = [];
     var cycles = {
         isEven: 0, isOdd: 0, isRed: 0, isBlack: 0, isHigh: 0, isLow: 0, isColumn1: 0, isColumn2: 0, isColumn3: 0, isDozen1: 0, isDozen2: 0, isDozen3: 0
     };
 
-    htmlMessageOut.innerHTML += "Running random cycle test " + DEBUG.Cycles +" times.<br>";
+    htmlMessageOut.innerHTML += "Running random cycle test " + DEBUG.Cycles + " times.<br>";
 
     for (var i = 0; i < DEBUG.Cycles; i++) {
         game.randomizeWinningNumber();
@@ -462,22 +537,22 @@ function testGameRandom() {
     nums.sort();
     var numsObj = {};
     var current = null;
-        var count = 0;
-        for (var i = 0; i < nums.length; i++) {
-            if (nums[i] != current) {
-                if (count > 0) {
-                    numsObj[current] = count;
-                }
-                current = nums[i];
-                count = 1;
-            } else {
-                count++;
+    var count = 0;
+    for (var i = 0; i < nums.length; i++) {
+        if (nums[i] != current) {
+            if (count > 0) {
+                numsObj[current] = count;
             }
+            current = nums[i];
+            count = 1;
+        } else {
+            count++;
         }
-        for(var k in numsObj) {
-            if (numsObj.hasOwnProperty(k))
-                htmlMessageOut.innerHTML += "Number " + k + " Appeared " + numsObj[k] + " Times.<br>";
-        }
+    }
+    for (var k in numsObj) {
+        if (numsObj.hasOwnProperty(k))
+            htmlMessageOut.innerHTML += "Number " + k + " Appeared " + numsObj[k] + " Times.<br>";
+    }
     for (var i = 0; i < nums.length; i++) {
         if (game.isEven(nums[i]) == OddEvenEnum.Even) cycles.isEven += 1
         if (game.isEven(nums[i]) == OddEvenEnum.Odd) cycles.isOdd += 1
@@ -510,15 +585,28 @@ function testGameRandom() {
 /***** Main Application  */
 
 htmlTitle = document.getElementById('title');
-htmlMessageOut = document.getElementById('messageOut');
-window.onload = function () {
-    if (DEBUG.isEnabled == false) runGame();
+htmlMessageOut = document.getElementById("appDiv");
+
+//window.onload = function () {
+if (DEBUG.isEnabled == false)
+    runGame(htmlMessageOut);
 
 
-    /***** End Application */
+/***** End Application */
 
 
-    /*****  UNIT TESTS    */
-    if (DEBUG.isEnabled) testGameRandom();
-    /*******************/
+/*****  UNIT TESTS    */
+//    if (DEBUG.isEnabled) testGameRandomness();
+if (DEBUG.isEnabled) {
+    for (var i = 0; i < DEBUG.Cycles; i++) {
+        try {
+            runGame(htmlMessageOut);
+        }
+        catch (ex) {
+            console.log(ex.message);
+            DEBUG.Errors += 1;
+        }
+    }
 }
+/*******************/
+//}
