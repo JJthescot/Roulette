@@ -419,11 +419,12 @@ function getBetAmount(player) {
     if (player === undefined) throw new Exception(ExceptionType.Undefined, "Player undefined.");
     else if (player.hasQuit()) throw new Exception(ExceptionType.QuitPlayerPlaying, "Quit player cannot play.");
     else {
-        var input = getNumericInput("Player " + player.Id + "\nHow much do you want to bet (in £'s)?", 0, 100000);
+        var input = getNumericInput("Player " + player.Id + "\nHow much do you want to bet (in &pound's)?", 0, 100000);
         if (input == 0) player.BetType = BetTypeEnum.Cancelled;
         else player.BetAmount = input;
     }
 }
+
 /*
 *   Prompt the user for the number of players, Maximum is defined as a constant.
 *   @return {Number} Number of players.
@@ -476,7 +477,7 @@ function contains(arr, val) {
 */
 function createHTMLText(div,message) {
     let p = document.createElement("p");
-    p.appendChild(document.createTextNode(message));
+    p.innerHTML = (message.toLocaleString());
     p.appendChild(document.createElement("br"));
     div.appendChild(p);
 }
@@ -511,7 +512,7 @@ function runGame(div) {
         else if (player.hasQuit())
             output += "Player " + player.Id + " backed out.";
         else if (roulette.isWinner(player)) {
-            output += "We have a winner, Congratulations Player " + player.Id + " has won £" + /*player.Winnings*/"(not  Implemented)" + " ";
+            output += "We have a winner, Congratulations Player " + player.Id + " has won &pound" + /*player.Winnings*/"(not  Implemented)" + " ";
 
             if (player.BetType != BetTypeEnum.Basic) {
                 output += "with a bet on " + Object.keys(BetTypeEnum)[player.BetType] + "";
@@ -520,7 +521,7 @@ function runGame(div) {
                 output += "with number " + player.BetNumber;
         }
         else {
-            output += ("Sorry Player " + player.Id + ", your not a winner this time. " + "You lost £" + player.BetAmount +
+            output += ("Sorry Player " + player.Id + ", your not a winner this time. " + "You lost &pound" + player.BetAmount +
                 " while betting on ");
             if (player.BetType == BetTypeEnum.Basic)
                 output += player.BetNumber;
