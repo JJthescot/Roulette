@@ -110,101 +110,109 @@ function PlayerObject() {
     // this.RoundsWon
     // this.TotalWon
     // this.TotalLoss
-    this.hasQuit = function(){ return this.BetType == BetTypeEnum.Cancelled; }
+    this.hasQuit = function () { return this.BetType == BetTypeEnum.Cancelled; }
+    this.processWinnings = function () { console.log("Proxy Handled");}
 }
+var players = [];
+var roulette = new RouletteGame();
+
+
 
 /*  Main roulette system controls the flow of the roulette system
-*
+*   @Todo - Implement event trigger
 */
 function RouletteGame() {
     this.WinningNumber = -1;
-
-    this.randomizeWinningNumber = function() {
+    this.randomizeWinningNumber = function () {
         this.WinningNumber = parseInt(Math.floor(Math.random() * 37));
     };
+//    this.randomizeWinningNumber = function () {
+//        this.WinningNumber = parseInt(Math.floor(Math.random() * 37));
+//    };
 
     /* Take current player object and calculates if the player won then stores the players winnings
     *   @Todo:  Implement '0' win
     *           Re-write to a better implementation
+    *   @return{Boolean} returns true if player is a winner
     */
-    //    this.getWinnings = function (player) {
-    this.getWinnings = function(player) {
+    this.isWinner = function(player) {
         switch (player.BetType) {
             case BetTypeEnum.Basic:
                 if (this.isEqual(this.WinningNumber, player.BetNumber)) {
-                    player.Winnings = (player.BetAmount * 35) + player.BetAmount;
+                    
+                    //                    player.Winnings = (player.BetAmount * 35) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Red:
                 if (this.isRedBlack(this.WinningNumber) == RedBlackEnum.Red) {
-                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Black:
                 if (this.isRedBlack(this.WinningNumber) == RedBlackEnum.Black) {
-                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Even:
                 if (this.isEven(this.WinningNumber) == OddEvenEnum.Even) {
-                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Odd:
                 if (!this.isEven(this.WinningNumber) == OddEvenEnum.Odd) {
-                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Passe:
                 if (this.ishighLow(this.WinningNumber) == HighLowEnum.Low) {
-                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Manque:
                 if (this.ishighLow(this.WinningNumber) == HighLowEnum.High) {
-                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 1) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Low_Dozen:
                 if (this.isDozen(this.WinningNumber) == DozensEnum.Low) {
-                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Mid_Dozen:
                 if (this.isDozen(this.WinningNumber) == DozensEnum.Mid) {
-                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.High_Dozen:
                 if (this.isDozen(this.WinningNumber) == DozensEnum.High) {
-                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Column_1:
                 if (this.isColumn(this.WinningNumber) == ColumnEnum.One) {
-                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Column_2:
                 if (this.isColumn(this.WinningNumber) == ColumnEnum.Two) {
-                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
             case BetTypeEnum.Column_3:
                 if (this.isColumn(this.WinningNumber) == ColumnEnum.Three) {
-                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
+//                    player.Winnings = (player.BetAmount * 2) + player.BetAmount;
                     return true;
                 }
                 break;
@@ -462,13 +470,21 @@ function contains(arr, val) {
     return false;
 }
 
+/*
+*   Handle html output
+*   @Param{String} message - sting message to output
+*/
+function createHTMLText(div,message) {
+    let p = document.createElement("p");
+    p.appendChild(document.createTextNode(message));
+    p.appendChild(document.createElement("br"));
+    div.appendChild(p);
+}
+
 function runGame(div) {
     //    if (navigator.userAgent.search("rv:11") != -1 || navigator.userAgent.search("MSIE") != -1)
     //        document.write("Browser identified itserlf as " + navigator.userAgent + "<br>" + "Sorry, this application requires features unsupported by \"Microsoft Internet Explorer.\"")
     //    else {
-    var players = [];
-    var roulette = new RouletteGame();
-    roulette.randomizeWinningNumber();
 
     var numberOfPlayers;
     if (DEBUG.isEnabled)
@@ -476,7 +492,7 @@ function runGame(div) {
     else
         numberOfPlayers = getNumofPlayers(MAXPLAYERS);
 
-    for (var i = 0; i < numberOfPlayers; i++) {
+    for (let i = 0; i < numberOfPlayers; i++) {
         players[i] = new PlayerObject();
         players[i].Id = i + 1;
         getPlayerBetChoice(players[i]);
@@ -485,42 +501,41 @@ function runGame(div) {
         }
     }
 
-    var p = document.createElement("p");
-    p.appendChild(document.createTextNode("The winning number is " + roulette.WinningNumber));
-    p.appendChild(document.createElement("br"));
-    for (var i = 0; i < numberOfPlayers; i++) {
-        var output = "";
-        if (players[i].BetType === undefined)
-            throw new Exception(ExceptionType.UndefinedBetType, players[i].toString() + " Player bet type is undefined");
-        else if (players[i].hasQuit())
-            output += "Player " + players[i].Id + " backed out.";
-        else if (roulette.getWinnings(players[i])) {
-            output += "We have a winner, Congratulations Player " + players[i].Id + " has won £" + players[i].Winnings + " ";
+    roulette.randomizeWinningNumber();
 
-            if (players[i].BetType != BetTypeEnum.Basic) {
-                output += "with a bet on " + Object.keys(BetTypeEnum)[players[i].BetType] + "";
+    createHTMLText(div, "The winning number is " + roulette.WinningNumber);
+    players.forEach(function (player) {//(let i = 0; i < numberOfPlayers; i++) {
+        let output = "";
+        if (player.BetType === undefined)
+            throw new Exception(ExceptionType.UndefinedBetType, player.toString() + " Player bet type is undefined");
+        else if (player.hasQuit())
+            output += "Player " + player.Id + " backed out.";
+        else if (roulette.isWinner(player)) {
+            output += "We have a winner, Congratulations Player " + player.Id + " has won £" + /*player.Winnings*/"(not  Implemented)" + " ";
+
+            if (player.BetType != BetTypeEnum.Basic) {
+                output += "with a bet on " + Object.keys(BetTypeEnum)[player.BetType] + "";
             }
             else
-                output += "with number " + players[i].BetNumber;
+                output += "with number " + player.BetNumber;
         }
         else {
-            output += ("Sorry Player " + players[i].Id + ", your not a winner this time. " + "You lost £" + players[i].BetAmount +
+            output += ("Sorry Player " + player.Id + ", your not a winner this time. " + "You lost £" + player.BetAmount +
                 " while betting on ");
-            if (players[i].BetType == BetTypeEnum.Basic)
-                output += players[i].BetNumber;
+            if (player.BetType == BetTypeEnum.Basic)
+                output += player.BetNumber;
             else
-                output += Object.keys(BetTypeEnum)[players[i].BetType];
+                output += Object.keys(BetTypeEnum)[player.BetType];
             output += " Why not try and win it back.";
         }
-        p.appendChild(document.createTextNode(output));
-        p.appendChild(document.createElement("br"));
-    }
-
-    div.appendChild(p);
-
+        createHTMLText(div, output);
+    })
 }
 
-
+/**
+*   Test function to check randomness of rng and test bet type checks
+*
+*/
 function testGameRandomness() {
     var game = new RouletteGame();
     var nums = [];
@@ -530,7 +545,7 @@ function testGameRandomness() {
 
     htmlMessageOut.innerHTML += "Running random cycle test " + DEBUG.Cycles + " times.<br>";
 
-    for (var i = 0; i < DEBUG.Cycles; i++) {
+    for (let i = 0; i < DEBUG.Cycles; i++) {
         game.randomizeWinningNumber();
         nums[i] = game.WinningNumber;
     }
@@ -538,7 +553,7 @@ function testGameRandomness() {
     var numsObj = {};
     var current = null;
     var count = 0;
-    for (var i = 0; i < nums.length; i++) {
+    for (let i = 0; i < nums.length; i++) {
         if (nums[i] != current) {
             if (count > 0) {
                 numsObj[current] = count;
@@ -549,11 +564,11 @@ function testGameRandomness() {
             count++;
         }
     }
-    for (var k in numsObj) {
+    for (let k in numsObj) {
         if (numsObj.hasOwnProperty(k))
             htmlMessageOut.innerHTML += "Number " + k + " Appeared " + numsObj[k] + " Times.<br>";
     }
-    for (var i = 0; i < nums.length; i++) {
+    for (let i = 0; i < nums.length; i++) {
         if (game.isEven(nums[i]) == OddEvenEnum.Even) cycles.isEven += 1
         if (game.isEven(nums[i]) == OddEvenEnum.Odd) cycles.isOdd += 1
         if (game.isRedBlack(nums[i]) == RedBlackEnum.Red) cycles.isRed += 1
@@ -584,29 +599,37 @@ function testGameRandomness() {
 
 /***** Main Application  */
 
-htmlTitle = document.getElementById('title');
-htmlMessageOut = document.getElementById("appDiv");
+var htmlTitle = document.getElementById('title');
+var htmlMessageOut = document.getElementById("appDiv");
 
-//window.onload = function () {
-if (DEBUG.isEnabled == false)
+if (DEBUG.isEnabled == true) {
+    
+    while (htmlMessageOut.hasChildNodes())
+        htmlMessageOut.removeChild(htmlMessageOut.lastChild);
+    htmlMessageOut.innerHTML = "";
+    var testSelect = document.getElementById("testSelect");
+    var btn = document.getElementById("testButton");
+    btn.innerHTML = "Test";
+    btn.addEventListener("click", function () {
+        if (testSelect.options[testSelect.selectedIndex].value == 1)
+            testGameRandomness();
+        else if (testSelect.options[testSelect.selectedIndex].value == 2)
+            for (let i = 0; i < DEBUG.Cycles; i++) {
+                try {
+                    runGame(htmlMessageOut);
+                }
+                catch (ex) {
+                    console.log(ex.message);
+                    DEBUG.Errors += 1;
+                }
+            }
+    });
+    document.getElementById("buttonDiv").appendChild(testSelect);
+    document.getElementById("buttonDiv").appendChild(btn);
+}
+else
     runGame(htmlMessageOut);
 
 
 /***** End Application */
 
-
-/*****  UNIT TESTS    */
-//    if (DEBUG.isEnabled) testGameRandomness();
-if (DEBUG.isEnabled) {
-    for (var i = 0; i < DEBUG.Cycles; i++) {
-        try {
-            runGame(htmlMessageOut);
-        }
-        catch (ex) {
-            console.log(ex.message);
-            DEBUG.Errors += 1;
-        }
-    }
-}
-/*******************/
-//}
